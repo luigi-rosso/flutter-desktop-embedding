@@ -94,6 +94,11 @@ static const int kDefaultWindowFramebuffer = 0;
  */
 - (void)dispatchKeyEvent:(NSEvent *)event ofType:(NSString *)type;
 
+/**
+ * Converts |event| to a mouse event channel message, and sends it to the engine.
+ */
+- (void)dispatchExtendedMouseEvent:(NSEvent *)event ofType:(NSString *)type;
+
 @end
 
 #pragma mark - Static methods provided to engine configuration
@@ -172,6 +177,9 @@ static bool HeadlessOnMakeResourceCurrent(FLEViewController *controller) { retur
   // A message channel for passing key events to the Flutter engine. This should be replaced with
   // an embedding API; see Issue #47.
   FLEBasicMessageChannel *_keyEventChannel;
+
+  // A message channel for passing extended mouse events.
+  FLEBasicMessageChannel *_mouseExtensionsEventChannel;
 }
 
 @dynamic view;
@@ -257,6 +265,10 @@ static void CommonInit(FLEViewController *controller) {
   _textInputPlugin = [[FLETextInputPlugin alloc] initWithViewController:self];
   _keyEventChannel =
       [FLEBasicMessageChannel messageChannelWithName:@"flutter/keyevent"
+                                     binaryMessenger:self
+                                               codec:[FLEJSONMessageCodec sharedInstance]];
+  _mouseExtensionsEventChannel =
+      [FLEBasicMessageChannel messageChannelWithName:@"flutter/mouseExtensions"
                                      binaryMessenger:self
                                                codec:[FLEJSONMessageCodec sharedInstance]];
 }
@@ -389,6 +401,17 @@ static void CommonInit(FLEViewController *controller) {
   FlutterEngineSendPointerEvent(_engine, &flutterEvent, 1);
 }
 
+- (void)dispatchExtendedMouseEvent:(NSEvent *)event ofType:(NSString *)type {
+  NSPoint locationInView = [self.view convertPoint:event.locationInWindow fromView:nil];
+  NSPoint locationInBackingCoordinates = [self.view convertPointToBacking:locationInView];
+  
+  [_mouseExtensionsEventChannel sendMessage:@{
+    @"type" : type,
+    @"x" : @(locationInBackingCoordinates.x),
+    @"y" : @(locationInBackingCoordinates.y)
+  }];
+}
+
 - (void)dispatchKeyEvent:(NSEvent *)event ofType:(NSString *)type {
   [_keyEventChannel sendMessage:@{
     @"keymap" : @"android",
@@ -453,6 +476,10 @@ static void CommonInit(FLEViewController *controller) {
   return YES;
 }
 
+- (BOOL)acceptsMouseMovedEvents {
+  return YES;
+}
+
 - (void)keyDown:(NSEvent *)event {
   [self dispatchKeyEvent:event ofType:@"keydown"];
   for (NSResponder *responder in self.additionalKeyResponders) {
@@ -483,4 +510,27 @@ static void CommonInit(FLEViewController *controller) {
   [self dispatchMouseEvent:event phase:kMove];
 }
 
+- (void)mouseMoved:(NSEvent *)event {
+  [self dispatchExtendedMouseEvent: event ofType:@"move"];
+}
+
+- (void)rightMouseDown:(NSEvent *)event {
+  [self dispatchExtendedMouseEvent: event ofType:@"rightDown"];
+}
+
+- (void)rightMouseUp:(NSEvent *)event {
+  [self dispatchExtendedMouseEvent: event ofType:@"rightUp"];
+}
+
+- (void)scrollWheel:(NSEvent *)event {
+  NSPoint locationInView = [self.view convertPoint:event.locationInWindow fromView:nil];
+  NSPoint locationInBackingCoordinates = [self.view convertPointToBacking:locationInView];
+  
+  [_mouseExtensionsEventChannel sendMessage:@{
+    @"type" : @"wheel",
+    @"x" : @(locationInBackingCoordinates.x),
+    @"y" : @(locationInBackingCoordinates.y),
+    @"dy": @(event.scrollingDeltaY)
+  }];
+}
 @end

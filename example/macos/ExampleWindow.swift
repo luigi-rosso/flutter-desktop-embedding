@@ -18,6 +18,7 @@ class ExampleWindow: NSWindow {
   @IBOutlet weak var flutterViewController: FLEViewController!
 
   override func awakeFromNib() {
+    acceptsMouseMovedEvents = true;
     FLEColorPanelPlugin.register(
       with: flutterViewController.registrar(forPlugin: "FLEColorPanelPlugin"))
     FLEFileChooserPlugin.register(
