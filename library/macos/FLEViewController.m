@@ -180,6 +180,9 @@ static bool HeadlessOnMakeResourceCurrent(FLEViewController *controller) { retur
 
   // A message channel for passing extended mouse events.
   FLEBasicMessageChannel *_mouseExtensionsEventChannel;
+
+  // A method channel for reading/saving.
+  FLEMethodChannel *_ioChannel;
 }
 
 @dynamic view;
@@ -271,6 +274,44 @@ static void CommonInit(FLEViewController *controller) {
       [FLEBasicMessageChannel messageChannelWithName:@"flutter/mouseExtensions"
                                      binaryMessenger:self
                                                codec:[FLEJSONMessageCodec sharedInstance]];
+  _ioChannel = [FLEMethodChannel methodChannelWithName:@"flutter/ioExtensions"
+                                       binaryMessenger:self
+                                                 codec:[FLEJSONMethodCodec sharedInstance]];
+  __weak FLEViewController *weakSelf = self;
+  [_ioChannel setMethodCallHandler:^(FLEMethodCall *call, FLEMethodResult result) {
+    [weakSelf handleIOMethodCall:call result:result];
+  }];
+}
+
+- (void)handleIOMethodCall:(FLEMethodCall *)call result:(FLEMethodResult)result {
+  NSString *method = call.methodName;
+  if ([method isEqualToString:@"write"]) {
+    NSString *filename = call.arguments[0];
+    NSString *contents = call.arguments[1];
+    NSString* filepath = [filename stringByReplacingOccurrencesOfString: @"~" withString:NSHomeDirectory()];
+    NSError *error;
+    [contents writeToFile:filepath atomically:YES encoding:NSUTF8StringEncoding error:&error];
+    if(error != nil)
+    {
+      result([[FLEMethodError alloc] initWithCode:@"error"
+                                  message:@"Failed to write to file"
+                                  details:nil]);
+    }
+    else
+    {
+      result(nil);
+    }
+  } else if ([method isEqualToString:@"read"]) {
+    NSString *filename = call.arguments[0];
+    NSError *error;
+    NSString* filepath = [filename stringByReplacingOccurrencesOfString: @"~" withString:NSHomeDirectory()];
+    NSString *fileContents = [NSString stringWithContentsOfFile:filepath encoding:NSUTF8StringEncoding error:&error];
+    result(fileContents);
+  } else {
+    NSLog(@"Unhandled text input method '%@'", method);
+    result(FLEMethodNotImplemented);
+  }
+  
 }
 
 - (BOOL)launchEngineInternalWithAssetsPath:(NSURL *)assets
