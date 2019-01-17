@@ -30,6 +30,8 @@ class ExampleWindow: NSWindow {
     // Pass through argument zero, since the Flutter engine expects to be processing a full
     // command line string.
     var arguments = [CommandLine.arguments[0]];
+    arguments.append("--observatory-port=50300");
+    //arguments.append("--start-paused");
 #if !DEBUG
     arguments.append("--disable-dart-asserts");
 #endif
