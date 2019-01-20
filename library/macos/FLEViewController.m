@@ -431,7 +431,7 @@ static void CommonInit(FLEViewController *controller) {
   [_mouseExtensionsEventChannel sendMessage:@{
     @"type" : type,
     @"x" : @(locationInBackingCoordinates.x),
-    @"y" : @(locationInBackingCoordinates.y)
+    @"y" : @(-locationInBackingCoordinates.y)
   }];
 }
 
@@ -552,7 +552,7 @@ static void CommonInit(FLEViewController *controller) {
   [_mouseExtensionsEventChannel sendMessage:@{
     @"type" : @"wheel",
     @"x" : @(locationInBackingCoordinates.x),
-    @"y" : @(locationInBackingCoordinates.y),
+    @"y" : @(-locationInBackingCoordinates.y),
     @"dy": @(event.scrollingDeltaY)
   }];
 }
