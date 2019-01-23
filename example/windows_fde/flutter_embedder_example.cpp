@@ -19,7 +19,8 @@
 
 int main(int argc, char **argv) {
   if (!flutter_desktop_embedding::FlutterInit()) {
-    std::cout << "Couldn't init GLFW" << std::endl;
+    std::cerr << "Unable to init GLFW; exiting." << std::endl;
+    return EXIT_FAILURE;
   }
   // Arguments for the Flutter Engine.
   std::vector<std::string> arguments;
@@ -29,10 +30,11 @@ int main(int argc, char **argv) {
   // Start the engine.
   // TODO: Make paths relative to the executable so it can be run from anywhere.
   auto window = flutter_desktop_embedding::CreateFlutterWindow(
-      640, 480, "..\\..\\example\\flutter_app\\build\\flutter_assets",
+      640, 480, "..\\build\\flutter_assets",
       "..\\..\\library\\windows\\dependencies\\engine\\icudtl.dat", arguments);
   if (window == nullptr) {
     flutter_desktop_embedding::FlutterTerminate();
+    std::cerr << "Unable to create Flutter window; exiting." << std::endl;
     return EXIT_FAILURE;
   }
 

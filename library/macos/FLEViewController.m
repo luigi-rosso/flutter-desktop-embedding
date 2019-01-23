@@ -33,6 +33,12 @@ static NSString *const kICUBundlePath = @"icudtl.dat";
 
 static const int kDefaultWindowFramebuffer = 0;
 
+// Android KeyEvent constants from https://developer.android.com/reference/android/view/KeyEvent
+static const int kAndroidMetaStateShift = 1 << 0;
+static const int kAndroidMetaStateAlt = 1 << 1;
+static const int kAndroidMetaStateCtrl = 1 << 12;
+static const int kAndroidMetaStateMeta = 1 << 16;
+
 #pragma mark - Private interface declaration.
 
 /**
@@ -344,10 +350,14 @@ static void CommonInit(FLEViewController *controller) {
   flutterArguments.command_line_argv = argv;
   flutterArguments.platform_message_callback = (FlutterPlatformMessageCallback)OnPlatformMessage;
 
-  BOOL result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, &flutterArguments,
-                                 (__bridge void *)(self), &_engine) == kSuccess;
+  FlutterResult result = FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, &flutterArguments,
+                                 (__bridge void *)(self), &_engine);
   free(argv);
-  return result;
+  if (result != kSuccess) {
+    NSLog(@"Failed to start Flutter engine: error %d", result);
+    return NO;
+  }
+  return YES;
 }
 
 + (FlutterRendererConfig)createRenderConfigHeadless:(BOOL)headless {
@@ -440,6 +450,12 @@ static void CommonInit(FLEViewController *controller) {
     @"keymap" : @"android",
     @"type" : type,
     @"keyCode" : @(event.keyCode),
+    @"metaState" : @(
+      ((event.modifierFlags & NSEventModifierFlagShift) ? kAndroidMetaStateShift : 0) |
+      ((event.modifierFlags & NSEventModifierFlagOption) ? kAndroidMetaStateAlt : 0) |
+      ((event.modifierFlags & NSEventModifierFlagControl) ? kAndroidMetaStateCtrl : 0) |
+      ((event.modifierFlags & NSEventModifierFlagCommand) ? kAndroidMetaStateMeta : 0)
+    )
   }];
 }
 

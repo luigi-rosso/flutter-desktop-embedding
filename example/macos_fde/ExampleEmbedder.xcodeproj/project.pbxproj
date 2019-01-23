@@ -131,7 +131,7 @@
 		33CC10FE2044A7620003C045 /* FlutterEmbedderMac.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = FlutterEmbedderMac.xcodeproj; path = ../../library/macos/FlutterEmbedderMac.xcodeproj; sourceTree = "<group>"; };
 		33CC11122044BFA00003C045 /* ExampleWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleWindow.swift; sourceTree = "<group>"; };
 		33CC11162044C3600003C045 /* Example Embedder-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Example Embedder-Bridging-Header.h"; sourceTree = "<group>"; };
-		33CC112C20461AD40003C045 /* flutter_assets */ = {isa = PBXFileReference; lastKnownFileType = text; name = flutter_assets; path = "$(FLUTTER_APP_ASSETS)"; sourceTree = "<absolute>"; };
+		33CC112C20461AD40003C045 /* flutter_assets */ = {isa = PBXFileReference; lastKnownFileType = text; name = flutter_assets; path = "$(FLUTTER_APP_ASSETS)"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -356,7 +356,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [[ -z \"${FLUTTER_APP}\" ]]; then\n    DEPOT_ROOT=\"$PROJECT_DIR\"/../..\n\"$DEPOT_ROOT\"/tools/build_flutter_assets \"$DEPOT_ROOT\"/example/flutter_app\nelse\n    DEPOT_ROOT=\"$PROJECT_DIR\"/../..\n\"$DEPOT_ROOT\"/tools/build_flutter_assets ${FLUTTER_APP}\nfi\n\n\n";
+			shellScript = "if [[ -z \"${FLUTTER_APP}\" ]]; then\n    FDE_ROOT=\"$PROJECT_DIR\"/../..\n\"$FDE_ROOT\"/tools/build_flutter_assets \"$PROJECT_DIR\"/..\nelse\n    FDE_ROOT=\"$PROJECT_DIR\"/../..\n\"$FDE_ROOT\"/tools/build_flutter_assets ${FLUTTER_APP}\nfi\n\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
