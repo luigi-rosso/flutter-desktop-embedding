@@ -549,6 +549,10 @@ static void CommonInit(FLEViewController *controller) {
   [self dispatchMouseEvent:event phase:kMove];
 }
 
+- (void)rightMouseDragged:(NSEvent *)event {
+  [self dispatchExtendedMouseEvent: event ofType:@"rightDrag"];
+}
+
 - (void)mouseMoved:(NSEvent *)event {
   [self dispatchExtendedMouseEvent: event ofType:@"move"];
 }
