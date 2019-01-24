@@ -565,6 +565,10 @@ static void CommonInit(FLEViewController *controller) {
   [self dispatchExtendedMouseEvent: event ofType:@"rightUp"];
 }
 
+- (void)flagsChanged:(NSEvent *)event {
+  [self dispatchKeyEvent: event ofType:([event modifierFlags] & NSEventModifierFlagFunction) ? @"keydown" : @"keyup"];
+}
+
 - (void)scrollWheel:(NSEvent *)event {
   NSPoint locationInView = [self.view convertPoint:event.locationInWindow fromView:nil];
   NSPoint locationInBackingCoordinates = [self.view convertPointToBacking:locationInView];
