@@ -17,6 +17,12 @@ for now there is no equivalent to `flutter create`.
 There are currently no binary releases of the libraries. While a more
 Flutter-like model of using an SDK containing pre-compiled binaries is likely
 to be supported in the future, for now you must build the library from source.
+(**Note:** You may be tempted to pre-build a generic binary that can run any
+Flutter app. If you do, keep in mind that the primary reason there are no
+binary releases is that you *must* use the same version of Flutter to build
+`flutter_assets` as you use to build the library. If you later upgrade Flutter,
+or if you distribute the binary version to other people building their
+applications with different versions of Flutter, it will break.)
 
 Once you build the library for your platform, link it into your build using
 whatever build system you are using, and add the relevant headers (see
@@ -31,7 +37,9 @@ the ICU data from the Flutter engine.
 
 #### Dependencies
 
-First you will need to install the relevant dependencies:
+##### Libraries
+
+First you will need to install the relevant library dependencies:
 *   GLFW3
 *   GTK 3
 *   jsoncpp
@@ -46,15 +54,36 @@ $ sudo apt-get install libglfw3-dev libepoxy-dev libjsoncpp-dev libgtk-3-dev \
       libx11-dev pkg-config
 ```
 
+##### GN
+
+You will need to install the build tools if you don't already have them:
+* [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages)
+* [gn](https://gn.googlesource.com/gn/)
+
+Ensure that both binaries are in your path.
+
 #### Using the Library
 
-Run `make` under `linux/`, then link `libflutter_embedder.so` into your
-binary. See [embedder.h](include/flutter_desktop_embedding/glfw/embedder.h)
-for details on calling into the library.
+To build the library, run the following at the root of this repository:
 
-You will also need to link `libflutter_engine.so` into your binary.
+```
+$ tools/gn_dart gen out
+$ ninja -C out flutter_embedder
+```
+Subsequent builds only require the `ninja` step, as the build will automatically
+re-run GN generation if necessary.
 
-_Note: There is also a [GN build](GN.md) available as an alternative to Make._
+The build results will be in the top-level `out/` directory. You will need to
+link `libflutter_embedder.so` and `libflutter_engine.so` into your binary.
+Public headers will be in `out/include/`; you should point dependent
+builds at that location rather than the `include/` directories in the
+source tree.
+
+The shared library provides a minimal C interface, but the recommended
+approach is to add the code in `out/fde_cpp_library/` to your project, to
+interact with the library using richer APIs. See
+[flutter_window_controller.h](/library/common/client_wrapper/include/flutter_desktop_embedding/glfw/flutter_window_controller.h)
+and the other headers under that directory for details.
 
 ### macOS
 
@@ -84,17 +113,60 @@ so you do not need to include that framework in your project directly.
 
 #### Dependencies
 
-You must have a copy of Visual Studio installed.
+##### Visual Studio
+
+You must have a copy of Visual Studio installed, and the command line build
+tools, such as `vcvars64.bat`, must be in your path. They are found under:
+
+```
+<Visual Studio Install Path>\2017\<Version>\VC\Auxiliary\Build
+```
+
+e.g.:
+
+```
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+```
+
+##### jsoncpp
+
+jsoncpp must be downloaded to `third_party/jsoncpp\src`. You can use
+`tools/dart_tools/bin/fetch_jsoncpp.dart` to simplify this:
+
+```
+> tools\run_dart_tool.bat fetch_jsoncpp third_party\jsoncpp\src
+```
+
+##### GN
+
+You will need to install the build tools if you don't already have them:
+* [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages)
+* [GN](https://gn.googlesource.com/gn/)
+
+Ensure that both binaries are in your path.
 
 #### Using the Library
 
-Build the GLFW Library project under `windows/` in Visual Studio into a static
-or dynamic library, then link `flutter_embedder.lib` into your binary and make
-sure `embedder.h` is in your include paths. Also ensure that the
-`flutter_engine.dll`, and if using a dynamic library
-`flutter_embedder.dll`, are in valid DLL include paths.
+To build the library, run the following at the root of this repository:
 
-The output files are located in `bin\x64\$(Configuration)\GLFW Library\`.
+```
+$ tools\gn_dart gen out
+$ ninja -C out flutter_embedder
+```
+Subsequent builds only require the `ninja` step, as the build will automatically
+re-run GN generation if necessary.
+
+The build results will be in the top-level `out\` directory. You will need to
+link `libflutter_embedder.dll` and `libflutter_engine.dll` into your binary.
+Public headers will be in `out/include/`; you should point dependent
+builds at that location rather than the `include/` directories in the
+source tree.
+
+The DLL provides a minimal C interface, but the recommended
+approach is to add the code in `out\fde_cpp_library\` to your project, to
+interact with the library using richer APIs. See
+[flutter_window_controller.h](/library/common/client_wrapper/include/flutter_desktop_embedding/glfw/flutter_window_controller.h)
+and the other headers under that directory for details.
 
 ## Caveats
 
