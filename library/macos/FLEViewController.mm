@@ -184,6 +184,9 @@ static bool HeadlessOnMakeResourceCurrent(FLEViewController *controller) { retur
 
   // A method channel for reading/saving.
   FLEMethodChannel *_ioChannel;
+
+  // A method channel for window operations.
+  FLEMethodChannel *_windowChannel;
 }
 
 @dynamic view;
@@ -274,6 +277,13 @@ static void CommonInit(FLEViewController *controller) {
   [_ioChannel setMethodCallHandler:^(FLEMethodCall *call, FLEMethodResult result) {
     [weakSelf handleIOMethodCall:call result:result];
   }];
+
+  _windowChannel = [FLEMethodChannel methodChannelWithName:@"flutter/windowExtensions"
+                                       binaryMessenger:self
+                                                 codec:[FLEJSONMethodCodec sharedInstance]];
+  [_windowChannel setMethodCallHandler:^(FLEMethodCall *call, FLEMethodResult result) {
+    [weakSelf handleWindowMethodCall:call result:result];
+  }];
 }
 
 - (void)handleIOMethodCall:(FLEMethodCall *)call result:(FLEMethodResult)result {
@@ -304,7 +314,18 @@ static void CommonInit(FLEViewController *controller) {
     NSLog(@"Unhandled text input method '%@'", method);
     result(FLEMethodNotImplemented);
   }
-  
+}
+
+- (void)handleWindowMethodCall:(FLEMethodCall *)call result:(FLEMethodResult)result {
+  NSString *method = call.methodName;
+  if ([method isEqualToString:@"setTitle"]) {
+    NSString *title = call.arguments[0];
+    [[[self view] window] setTitle:title];
+    result(nil);
+  } else {
+    NSLog(@"Unhandled text input method '%@'", method);
+    result(FLEMethodNotImplemented);
+  }
 }
 
 - (BOOL)launchEngineInternalWithAssetsPath:(NSURL *)assets
